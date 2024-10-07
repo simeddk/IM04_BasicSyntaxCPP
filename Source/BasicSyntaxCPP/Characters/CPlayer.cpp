@@ -1,9 +1,35 @@
 #include "CPlayer.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Camera/CameraComponent.h"
 
 ACPlayer::ACPlayer()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Create Camera Component
+	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
+	SpringArmComp->SetupAttachment(RootComponent);
+	SpringArmComp->SetRelativeLocation(FVector(0, 0, 60));
+	SpringArmComp->TargetArmLength = 200.f;
+	SpringArmComp->bUsePawnControlRotation = true;
+
+	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
+	CameraComp->SetupAttachment(SpringArmComp);
+
+	//Set Skeletal Mesh Asset
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshAsset(TEXT("SkeletalMesh'/Game/Character/Mesh/SK_Mannequin.SK_Mannequin'"));
+	if (MeshAsset.Succeeded())
+	{
+		GetMesh()->SetSkeletalMesh(MeshAsset.Object);
+		GetMesh()->SetRelativeLocation(FVector(0, 0, -88));
+		GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+	}
+
+	//Character Movement
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 }
 
 void ACPlayer::BeginPlay()
@@ -40,6 +66,5 @@ void ACPlayer::OnMoveRight(float Axis)
 	FVector Direction = FQuat(ControlRot).GetRightVector();
 
 	AddMovementInput(Direction, Axis);
-	//Todo. 나머지 입력 이벤트
 }
 
