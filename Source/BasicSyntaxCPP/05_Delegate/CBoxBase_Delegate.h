@@ -4,7 +4,8 @@
 #include "04_Collision/CBoxBase.h"
 #include "CBoxBase_Delegate.generated.h"
 
-DECLARE_DELEGATE(FBoxOverlap);
+DECLARE_DELEGATE(FBoxOverlap); //void FUNCTION()
+DECLARE_DELEGATE_RetVal_OneParam(FString, FRetValOverlap, FLinearColor); //FString FUNCTION(FLinearColor InParam)
 
 UCLASS()
 class BASICSYNTAXCPP_API ACBoxBase_Delegate : public ACBoxBase
@@ -14,6 +15,16 @@ class BASICSYNTAXCPP_API ACBoxBase_Delegate : public ACBoxBase
 protected:
 	virtual void BeginPlay() override;
 
-	//Todo. 딜리게이트의 변수화
+private:
+	UFUNCTION()
+	void BeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+	UFUNCTION()
+	void EndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+
+public:
+	FBoxOverlap OnBoxBeginOverlap;
+	FBoxOverlap OnBoxEndOverlap;
 	
+	FRetValOverlap OnRetValOverlap;
 };
