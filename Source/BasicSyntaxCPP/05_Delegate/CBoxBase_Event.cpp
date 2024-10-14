@@ -10,5 +10,3 @@ void ACBoxBase_Event::BeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	OnBoxEvent.Broadcast(UKismetMathLibrary::RandomIntegerInRange(0, 2));
 }
-
-//Todo. 위 딜리게이트에 바인딩할 함수 만들기
