@@ -110,6 +110,5 @@ void ACPlayer::ResetBodyColor()
 		FLinearColor(0.45098f, 0.403922f, 0.360784f),
 		FLinearColor(0.45098f, 0.403922f, 0.360784f)
 	);
-	//Todo. ResetColor Test
 }
 
