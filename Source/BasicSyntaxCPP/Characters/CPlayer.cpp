@@ -1,8 +1,10 @@
 #include "CPlayer.h"
+#include "BasicSyntaxCpp.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
-
+#include "Components/StaticMeshComponent.h"
+#include "Weapons/CAR4.h"
 
 ACPlayer::ACPlayer()
 {
@@ -34,6 +36,18 @@ ACPlayer::ACPlayer()
 
 	}
 
+	//Backpack
+	BackPackComp = CreateDefaultSubobject<UStaticMeshComponent>("BackPackComp");
+	
+	ConstructorHelpers::FObjectFinder<UStaticMesh> BackpackMeshAsset(TEXT("/Game/StaticMeshes/Backpack/Backpack"));
+	if (BackpackMeshAsset.Succeeded())
+	{
+		BackPackComp->SetStaticMesh(BackpackMeshAsset.Object);
+	}
+	BackPackComp->SetupAttachment(GetMesh(), "Backpack");
+	
+	CHelpers::GetClass(&WeaponClass, "/Game/AR4/BP_CAR4");
+
 	//Character Movement
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -49,6 +63,10 @@ void ACPlayer::BeginPlay()
 
 	GetMesh()->SetMaterial(0, BodyMaterial);
 	GetMesh()->SetMaterial(1, LogoMaterial);
+
+	FActorSpawnParameters SpawnParam;
+	SpawnParam.Owner = this;
+	AR4 = GetWorld()->SpawnActor<ACAR4>(WeaponClass, SpawnParam);
 }
 
 void ACPlayer::Tick(float DeltaTime)
@@ -69,6 +87,8 @@ void ACPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ACPlayer::OnSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ACPlayer::OffSprint);
+
+	PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &ACPlayer::OnRifle);
 }
 
 void ACPlayer::OnMoveForward(float Axis)
@@ -95,6 +115,10 @@ void ACPlayer::OnSprint()
 void ACPlayer::OffSprint()
 {
 	GetCharacterMovement()->MaxWalkSpeed = 400;
+}
+
+void ACPlayer::OnRifle()
+{
 }
 
 void ACPlayer::SetBodyColor(FLinearColor InBodyColor, FLinearColor InLogoColor)
