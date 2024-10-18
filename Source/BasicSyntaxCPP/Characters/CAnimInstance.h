@@ -15,4 +15,7 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Player")
 	float Speed;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Player")
+	bool bEquipped;
 };

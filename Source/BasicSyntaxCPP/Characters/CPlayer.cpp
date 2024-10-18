@@ -119,6 +119,13 @@ void ACPlayer::OffSprint()
 
 void ACPlayer::OnRifle()
 {
+	if (AR4->IsEquipped())
+	{
+		AR4->Unequip();
+		return;
+	}
+
+	AR4->Equip();
 }
 
 void ACPlayer::SetBodyColor(FLinearColor InBodyColor, FLinearColor InLogoColor)
