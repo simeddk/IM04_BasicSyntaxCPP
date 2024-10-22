@@ -28,6 +28,13 @@ public:
 public:
 	FORCEINLINE ACAR4* GetWeapon() override { return AR4; }
 
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void ZoomIn();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ZoomOut();
+
 private:
 	void OnMoveForward(float Axis);
 	void OnMoveRight(float Axis);
@@ -37,6 +44,9 @@ private:
 
 	void OnRifle();
 
+	void OnAim();
+	void OffAim();
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetBodyColor(FLinearColor InBodyColor, FLinearColor InLogoColor);
@@ -44,11 +54,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ResetBodyColor();
 
-private:
+protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	USpringArmComponent* SpringArmComp;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly, Category = "Components")
 	UCameraComponent* CameraComp;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
