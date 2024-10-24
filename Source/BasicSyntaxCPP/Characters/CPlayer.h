@@ -9,6 +9,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UMaterialInstanceDynamic;
 class ACAR4;
+class UCAimWidget;
 
 UCLASS()
 class BASICSYNTAXCPP_API ACPlayer : public ACharacter, public ICWeaponInterface
@@ -27,6 +28,9 @@ public:
 
 public:
 	FORCEINLINE ACAR4* GetWeapon() override { return AR4; }
+	void GetAimRay(FVector& OutAimStart, FVector& OutEnd, FVector& OutAimDirection) override;
+	void OnTarget() override;
+	void OffTarget() override;
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
@@ -34,6 +38,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ZoomOut();
+
+	UFUNCTION(Exec)
+	void AddLaunch(float Height = 1000.f);
 
 private:
 	void OnMoveForward(float Axis);
@@ -43,6 +50,9 @@ private:
 	void OffSprint();
 
 	void OnRifle();
+
+	void OnFire();
+	void OffFire();
 
 	void OnAim();
 	void OffAim();
@@ -64,13 +74,17 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* BackPackComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Class")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapons")
 	TSubclassOf<ACAR4> WeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
+	TSubclassOf<UCAimWidget> AimWidetClass;
 
 private:
 	UMaterialInstanceDynamic* BodyMaterial;
 	UMaterialInstanceDynamic* LogoMaterial;
 
 	ACAR4* AR4;
+	UCAimWidget* AimWidget;
 
 };

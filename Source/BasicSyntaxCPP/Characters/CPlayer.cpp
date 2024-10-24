@@ -4,7 +4,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "Weapons/CAR4.h"
+#include "UI/CAimWidget.h"
 
 ACPlayer::ACPlayer()
 {
@@ -53,21 +55,31 @@ ACPlayer::ACPlayer()
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
+
+	//Get Aim Widget Class Asset
+	CHelpers::GetClass(&AimWidetClass, "/Game/UI/WB_Aim");
 }
 
 void ACPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//Set Dynamic Material
 	BodyMaterial = UMaterialInstanceDynamic::Create(GetMesh()->GetMaterial(0), nullptr);
 	LogoMaterial = UMaterialInstanceDynamic::Create(GetMesh()->GetMaterial(1), nullptr);
 
 	GetMesh()->SetMaterial(0, BodyMaterial);
 	GetMesh()->SetMaterial(1, LogoMaterial);
 
+	//Spawn AR4
 	FActorSpawnParameters SpawnParam;
 	SpawnParam.Owner = this;
 	AR4 = GetWorld()->SpawnActor<ACAR4>(WeaponClass, SpawnParam);
+
+	//Create Aim Widget
+	AimWidget = CreateWidget<UCAimWidget>(GetController<APlayerController>(), AimWidetClass);
+	AimWidget->AddToViewport();
+	AimWidget->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void ACPlayer::Tick(float DeltaTime)
@@ -91,8 +103,22 @@ void ACPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &ACPlayer::OnRifle);
 
+	PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ACPlayer::OnFire);
+	PlayerInputComponent->BindAction("Action", IE_Released, this, &ACPlayer::OffFire);
+
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ACPlayer::OnAim);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ACPlayer::OffAim);
+}
+
+void ACPlayer::AddLaunch(float Height)
+{
+	FVector Current = GetActorLocation();
+
+	TeleportTo
+	(
+		Current + FVector(0, 0, Height),
+		GetActorRotation()
+	);
 }
 
 void ACPlayer::OnMoveForward(float Axis)
@@ -137,6 +163,16 @@ void ACPlayer::OnRifle()
 	AR4->Equip();
 }
 
+void ACPlayer::OnFire()
+{
+	AR4->OnFire();
+}
+
+void ACPlayer::OffFire()
+{
+	AR4->OffFire();
+}
+
 void ACPlayer::OnAim()
 {
 	if (!AR4->IsEquipped()) return;
@@ -151,6 +187,8 @@ void ACPlayer::OnAim()
 	AR4->EnableAim();
 
 	ZoomIn();
+
+	AimWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
 
 void ACPlayer::OffAim()
@@ -167,6 +205,8 @@ void ACPlayer::OffAim()
 	AR4->DisableAim();
 
 	ZoomOut();
+
+	AimWidget->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void ACPlayer::SetBodyColor(FLinearColor InBodyColor, FLinearColor InLogoColor)
@@ -184,3 +224,31 @@ void ACPlayer::ResetBodyColor()
 	);
 }
 
+void ACPlayer::GetAimRay(FVector& OutAimStart, FVector& OutEnd, FVector& OutAimDirection)
+{
+	//Get Direction
+	OutAimDirection = CameraComp->GetForwardVector();
+
+	FVector CamLoc = CameraComp->GetComponentToWorld().GetLocation();
+	FVector MuzzleLoc = AR4->GetMesh()->GetSocketLocation("MuzzleFlash");
+	
+	//Get Start
+	float Projected = (MuzzleLoc - CamLoc) | OutAimDirection;
+	OutAimStart = CamLoc + OutAimDirection * Projected;
+
+	//Get End
+	FVector RandomConeDegree = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(OutAimDirection, 0.2f);
+	RandomConeDegree *= AR4->GetShootRange();
+	OutEnd = OutAimStart + RandomConeDegree;
+
+}
+
+void ACPlayer::OnTarget()
+{
+	AimWidget->OnTarget();
+}
+
+void ACPlayer::OffTarget()
+{
+	AimWidget->OffTarget();
+}

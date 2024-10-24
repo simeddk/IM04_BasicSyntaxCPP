@@ -2,6 +2,10 @@
 #include "BasicSyntaxCpp.h"
 #include "GameFramework/Character.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "DrawDebugHelpers.h"
+#include "CWeaponInterface.h"
+
+static TAutoConsoleVariable<bool> CVarDrawDebugLine(TEXT("IM.DrawDebug"), false, TEXT("Visible AR4 aim line"), ECVF_Cheat);
 
 ACAR4::ACAR4()
 {
@@ -20,6 +24,7 @@ ACAR4::ACAR4()
 	HandSocket = "Hand_AR4";
 
 	MontagesPlayRate = 1.75f;
+	ShootRange = 10000.f;
 }
 
 void ACAR4::BeginPlay()
@@ -44,6 +49,41 @@ void ACAR4::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!bAiming) return;
+
+	ICWeaponInterface* OwnerInterface = Cast<ICWeaponInterface>(OwnerCharacter);
+	if (!OwnerInterface) return;
+
+	FVector Start, End, Direction;
+	OwnerInterface->GetAimRay(Start, End, Direction);
+
+	if (CVarDrawDebugLine.GetValueOnGameThread())
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, -1.f, 0, 3.f);
+	}
+	
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(OwnerCharacter);
+
+	FHitResult Hit;
+	if (GetWorld()->LineTraceSingleByChannel
+	(
+		Hit,
+		Start,
+		End,
+		ECC_PhysicsBody,
+		QueryParams
+	))
+	{
+		if (Hit.GetComponent()->IsSimulatingPhysics())
+		{
+			OwnerInterface->OnTarget();
+			return;
+		}
+	}
+
+	OwnerInterface->OffTarget();
 }
 
 void ACAR4::EnableAim()
@@ -106,5 +146,58 @@ void ACAR4::Begin_Unequip()
 void ACAR4::End_Unequip()
 {
 	bPlayingMontage = false;
+}
+
+void ACAR4::OnFire()
+{
+	if (!bEquipped) return;
+	if (bPlayingMontage) return;
+
+	if (!bAiming) return;
+	if (bFiring) return;
+
+	bFiring = true;
+
+	Firing_Internal();
+}
+
+void ACAR4::OffFire()
+{
+	bFiring = false;
+}
+
+void ACAR4::Firing_Internal()
+{
+	ICWeaponInterface* OwnerInteface = Cast<ICWeaponInterface>(OwnerCharacter);
+	if (!OwnerInteface) return;
+
+	FVector Start, End, Direction;
+	OwnerInteface->GetAimRay(Start, End, Direction);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(OwnerCharacter);
+
+	FHitResult Hit;
+	if (GetWorld()->LineTraceSingleByChannel
+	(
+		Hit,
+		Start,
+		End,
+		ECC_Visibility,
+		QueryParams
+	))
+	{
+		//Add Impulse to PhysicsBody
+		UPrimitiveComponent* HitComp = Hit.GetComponent();
+		if (Hit.GetComponent()->IsSimulatingPhysics())
+		{
+			Direction = Hit.GetActor()->GetActorLocation() - OwnerCharacter->GetActorLocation();
+			Direction.Normalize();
+
+			HitComp->AddImpulseAtLocation(Direction * 3000.f, OwnerCharacter->GetActorLocation());
+		}
+
+	}
 }
 
