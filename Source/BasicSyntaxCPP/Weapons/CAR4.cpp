@@ -192,7 +192,7 @@ void ACAR4::Firing_Internal()
 		UPrimitiveComponent* HitComp = Hit.GetComponent();
 		if (Hit.GetComponent()->IsSimulatingPhysics())
 		{
-			Direction = Hit.GetActor()->GetActorLocation() - OwnerCharacter->GetActorLocation();
+			//Direction = Hit.GetActor()->GetActorLocation() - OwnerCharacter->GetActorLocation();
 			Direction.Normalize();
 
 			HitComp->AddImpulseAtLocation(Direction * 3000.f, OwnerCharacter->GetActorLocation());
