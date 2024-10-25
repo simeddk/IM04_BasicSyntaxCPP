@@ -189,12 +189,15 @@ void ACAR4::Firing_Internal()
 	))
 	{
 		//Add Impulse to PhysicsBody
-		CLog::Log("HAHA");
-		CLog::Log("HAHA");
-		CLog::Log("HAHA");
-		CLog::Log("HAHA");
-		CLog::Log("HAHA");
-		CLog::Log("HAHA");
+		UPrimitiveComponent* HitComp = Hit.GetComponent();
+		if (Hit.GetComponent()->IsSimulatingPhysics())
+		{
+			Direction = Hit.GetActor()->GetActorLocation() - OwnerCharacter->GetActorLocation();
+			Direction.Normalize();
+
+			HitComp->AddImpulseAtLocation(Direction * 3000.f, OwnerCharacter->GetActorLocation());
+		}
+
 
 	}
 }
