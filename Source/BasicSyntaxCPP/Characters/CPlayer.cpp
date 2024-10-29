@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Weapons/CAR4.h"
 #include "UI/CAimWidget.h"
+#include "UI/CGameInfoWidget.h"
 
 ACPlayer::ACPlayer()
 {
@@ -56,8 +57,9 @@ ACPlayer::ACPlayer()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 
-	//Get Aim Widget Class Asset
+	//Get Widget Class Asset
 	CHelpers::GetClass(&AimWidetClass, "/Game/UI/WB_Aim");
+	CHelpers::GetClass(&GameInfoWidgetClass, "/Game/UI/WB_GameInfo");
 }
 
 void ACPlayer::BeginPlay()
@@ -76,10 +78,19 @@ void ACPlayer::BeginPlay()
 	SpawnParam.Owner = this;
 	AR4 = GetWorld()->SpawnActor<ACAR4>(WeaponClass, SpawnParam);
 
-	//Create Aim Widget
-	AimWidget = CreateWidget<UCAimWidget>(GetController<APlayerController>(), AimWidetClass);
-	AimWidget->AddToViewport();
-	AimWidget->SetVisibility(ESlateVisibility::Hidden);
+	//Create Widget
+	if (AimWidetClass)
+	{
+		AimWidget = CreateWidget<UCAimWidget>(GetController<APlayerController>(), AimWidetClass);
+		AimWidget->AddToViewport();
+		AimWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	if (GameInfoWidgetClass)
+	{
+		GameInfoWidget = CreateWidget<UCGameInfoWidget>(GetController<APlayerController>(), GameInfoWidgetClass);
+		GameInfoWidget->AddToViewport();
+	}
 }
 
 void ACPlayer::Tick(float DeltaTime)
@@ -190,7 +201,10 @@ void ACPlayer::OnAim()
 
 	ZoomIn();
 
-	AimWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	if (AimWidget)
+	{
+		AimWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
 }
 
 void ACPlayer::OffAim()
@@ -208,14 +222,18 @@ void ACPlayer::OffAim()
 
 	ZoomOut();
 
-	AimWidget->SetVisibility(ESlateVisibility::Hidden);
+	if (AimWidget)
+	{
+		AimWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void ACPlayer::OnAutoFire()
 {
 	if (AR4->IsFiring()) return;
-
 	AR4->ToggleAutoFiring();
+
+	AR4->IsAutoFiring() ? GameInfoWidget->EnableAutoFire() : GameInfoWidget->DisableAutoFire();
 }
 
 void ACPlayer::SetBodyColor(FLinearColor InBodyColor, FLinearColor InLogoColor)

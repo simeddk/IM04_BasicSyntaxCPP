@@ -38,6 +38,7 @@ ACAR4::ACAR4()
 
 	MontagesPlayRate = 1.75f;
 	ShootRange = 10000.f;
+	PitchSpeed = 0.25f;
 }
 
 void ACAR4::BeginPlay()
@@ -176,6 +177,8 @@ void ACAR4::OnFire()
 
 	bFiring = true;
 
+	CurrentPitch = 0.f;
+
 	if (bAutoFiring)
 	{
 		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, this, &ACAR4::Firing_Internal, 0.1f, true, 0.f);
@@ -228,6 +231,14 @@ void ACAR4::Firing_Internal()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActor(OwnerCharacter);
+
+	//Increase Pitch
+	CurrentPitch -= PitchSpeed * GetWorld()->GetDeltaSeconds();
+	if (CurrentPitch > -PitchSpeed)
+	{
+		OwnerCharacter->AddControllerPitchInput(CurrentPitch);
+		CLog::Print(CurrentPitch, 1);
+	}
 
 	FHitResult Hit;
 	if (GetWorld()->LineTraceSingleByChannel
