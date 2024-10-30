@@ -191,8 +191,8 @@ void ACPlayer::OnAim()
 	if (!AR4->IsEquipped()) return;
 	if (AR4->IsPlayingMontage()) return;
 
-	bUseControllerRotationYaw = true;
-	GetCharacterMovement()->bOrientRotationToMovement = false;
+	//bUseControllerRotationYaw = true;
+	//GetCharacterMovement()->bOrientRotationToMovement = false;
 	
 	SpringArmComp->TargetArmLength = 100.f;
 	SpringArmComp->SocketOffset = FVector(0, 30, 10);
@@ -212,8 +212,8 @@ void ACPlayer::OffAim()
 	if (!AR4->IsEquipped()) return;
 	if (AR4->IsPlayingMontage()) return;
 
-	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	//bUseControllerRotationYaw = false;
+	//GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	SpringArmComp->TargetArmLength = 200.f;
 	SpringArmComp->SocketOffset = FVector(0, 60, 0);
